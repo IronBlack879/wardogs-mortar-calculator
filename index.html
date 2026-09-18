@@ -76,9 +76,6 @@
   .details{margin-top:14px;font-size:13px;color:var(--muted);display:flex;gap:18px;flex-wrap:wrap;
     justify-content:center;align-items:center}
   .details span b{color:var(--ink);font-variant-numeric:tabular-nums}
-  .axes{display:inline-flex;align-items:center;gap:6px}
-  .axes select{background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:6px;
-    padding:3px 6px;font:inherit;font-size:12.5px}
 
   details.help{margin-top:26px;border-top:1px solid var(--line);padding-top:16px}
   details.help summary{cursor:pointer;font-family:"Saira Condensed",sans-serif;font-weight:600;
@@ -133,13 +130,6 @@
   <div class="details">
     <span>&Delta;X <b id="dx">&mdash;</b></span>
     <span>&Delta;Y <b id="dy">&mdash;</b></span>
-    <span class="axes">Ground axes
-      <select id="axes" aria-label="Select horizontal axes">
-        <option value="01">1 &amp; 2</option>
-        <option value="02">1 &amp; 3</option>
-        <option value="12">2 &amp; 3</option>
-      </select>
-    </span>
   </div>
 
   <details class="help">
@@ -150,9 +140,6 @@
       <li>Press <code>Ctrl+A</code> to select all, then <code>Ctrl+C</code> to copy.</li>
       <li>Paste into the matching field, then repeat for the second point.</li>
       <li>Align your sight on the diamond marker and set the <b>RNG</b> to the displayed value.</li>
-    </ol>
-    <ol style="list-style:none;padding-left:0;margin-top:14px">
-      <li>If your coordinates include a height value (three numbers), keep the setting on <b>1 &amp; 2</b>. Change it only if the result appears incorrect.</li>
     </ol>
   </details>
 
@@ -165,16 +152,15 @@
 
 <script>
 (function(){
-  var WPN_KEY="wd_weapon", AX_KEY="wd_axes";
+  var WPN_KEY="wd_weapon";
   var SCALE=100;
   var RANGES={ mortar:{min:0,max:700}, artillery:{min:750,max:2630} };
   var weapon="mortar";
 
   var $=function(id){return document.getElementById(id);};
-  var posA=$("posA"), posB=$("posB"), axesSel=$("axes");
+  var posA=$("posA"), posB=$("posB");
 
   try{var w=localStorage.getItem(WPN_KEY); if(w&&RANGES[w]) weapon=w;}catch(e){}
-  try{var a=localStorage.getItem(AX_KEY); if(a) axesSel.value=a;}catch(e){}
 
   function paintWeapon(){
     document.querySelectorAll(".weapons button").forEach(function(b){
@@ -188,18 +174,9 @@
       compute();
     });
   });
-  axesSel.addEventListener("change",function(){
-    try{localStorage.setItem(AX_KEY,axesSel.value);}catch(e){}
-    compute();
-  });
-
   function nums(s){
     var m=(s||"").match(/-?\d+(?:\.\d+)?/g);
     return m?m.map(Number):[];
-  }
-  function pick(arr){
-    var idx=axesSel.value.split("").map(Number);
-    return [arr[idx[0]], arr[idx[1]]];
   }
 
   function compute(){
@@ -208,8 +185,7 @@
     $("parsedA").innerHTML = A.length ? "read: <b>"+A.join(", ")+"</b>" : "";
     $("parsedB").innerHTML = B.length ? "read: <b>"+B.join(", ")+"</b>" : "";
 
-    var needA = axesSel.value==="12" ? 3 : 2;
-    var enough = A.length>=needA && B.length>=needA;
+    var enough = A.length>=2 && B.length>=2;
 
     var num=$("num"), dial=$("dial"), status=$("status");
     if(!enough){
@@ -219,8 +195,7 @@
       return;
     }
 
-    var a=pick(A), b=pick(B);
-    var dx=b[0]-a[0], dy=b[1]-a[1];
+    var dx=B[0]-A[0], dy=B[1]-A[1];
     var dist=Math.sqrt(dx*dx+dy*dy)*SCALE;
     var m=Math.round(dist);
 
