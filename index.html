@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>War Dogs · Range Calculator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Saira+Condensed:wght@400;500;600;700&family=Saira:wght@600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#14170F; --panel:#1B2014; --panel-2:#22281A; --line:#3B4327;
+    --ink:#E6E9D8; --muted:#9CA37E; --accent:#E0A22A; --accent-soft:#f2c766;
+    --warn:#D45A3A; --good:#8FB13F; --focus:#E0A22A;
+    --grid:rgba(120,133,74,.10);
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{
+    background:var(--bg);
+    background-image:
+      linear-gradient(var(--grid) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+    background-size:28px 28px;
+    color:var(--ink);
+    font-family:"Inter",system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
+    line-height:1.5;
+    min-height:100vh;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:760px;margin:0 auto;padding:22px 18px 60px}
+
+  header{margin-bottom:6px}
+  .brand{font-family:"Saira Condensed",sans-serif;font-weight:700;letter-spacing:.04em;font-size:15px;color:var(--muted)}
+  .brand b{color:var(--ink)}
+
+  h1{font-family:"Saira Condensed",sans-serif;font-weight:700;font-size:clamp(30px,7vw,46px);
+    line-height:1.02;margin:2px 0 2px;letter-spacing:.01em}
+  .sub{color:var(--muted);font-size:15px;margin:0 0 20px;max-width:56ch}
+
+  .weapons{display:flex;gap:8px;margin-bottom:18px}
+  .weapons button{flex:1;background:var(--panel);border:1px solid var(--line);color:var(--muted);
+    font-family:"Saira Condensed",sans-serif;font-weight:600;font-size:16px;letter-spacing:.03em;
+    padding:11px 8px;border-radius:8px;cursor:pointer;transition:border-color .12s,color .12s}
+  .weapons button .r{display:block;font-family:"Inter",sans-serif;font-weight:400;font-size:11.5px;
+    letter-spacing:0;color:var(--muted);margin-top:2px}
+  .weapons button[aria-pressed="true"]{color:var(--ink);border-color:var(--accent);background:var(--panel-2)}
+  .weapons button:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+
+  .inputs{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  @media (max-width:520px){.inputs{grid-template-columns:1fr}}
+  .field{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px}
+  .field label{display:block;font-family:"Saira Condensed",sans-serif;font-weight:600;
+    font-size:14px;letter-spacing:.02em;margin-bottom:7px}
+  .field .tag{color:var(--muted);font-weight:400}
+  textarea{width:100%;resize:vertical;min-height:64px;background:var(--bg);color:var(--ink);
+    border:1px solid var(--line);border-radius:7px;padding:9px 10px;font:inherit;font-size:14px}
+  textarea:focus-visible{outline:2px solid var(--focus);outline-offset:1px;border-color:var(--focus)}
+  .parsed{margin-top:7px;font-size:12.5px;color:var(--muted);min-height:16px}
+  .parsed b{color:var(--ink);font-weight:600}
+
+  .readout{margin-top:16px;background:var(--panel-2);border:1px solid var(--line);border-radius:12px;
+    padding:22px 20px;text-align:center;position:relative;overflow:hidden}
+  .readout .cap{font-family:"Saira Condensed",sans-serif;letter-spacing:.28em;font-size:13px;color:var(--muted)}
+  .num{font-family:"Saira",sans-serif;font-weight:800;font-size:clamp(58px,17vw,104px);line-height:.92;
+    font-variant-numeric:tabular-nums;color:var(--accent);margin:6px 0 2px;transition:color .15s}
+  .num .u{font-size:.34em;font-weight:700;color:var(--muted);margin-left:.12em;vertical-align:.35em}
+  .num.dim{color:var(--muted)}
+  .dial{font-size:14px;color:var(--ink)}
+  .dial b{color:var(--accent-soft)}
+  .status{display:inline-block;margin-top:12px;font-family:"Saira Condensed",sans-serif;font-weight:600;
+    letter-spacing:.05em;font-size:14px;padding:4px 12px;border-radius:999px;border:1px solid var(--line)}
+  .status.ok{color:var(--good);border-color:color-mix(in srgb,var(--good) 55%,transparent)}
+  .status.no{color:var(--warn);border-color:color-mix(in srgb,var(--warn) 55%,transparent)}
+
+  .details{margin-top:14px;font-size:13px;color:var(--muted);display:flex;gap:18px;flex-wrap:wrap;
+    justify-content:center;align-items:center}
+  .details span b{color:var(--ink);font-variant-numeric:tabular-nums}
+  .axes{display:inline-flex;align-items:center;gap:6px}
+  .axes select{background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:6px;
+    padding:3px 6px;font:inherit;font-size:12.5px}
+
+  details.help{margin-top:26px;border-top:1px solid var(--line);padding-top:16px}
+  details.help summary{cursor:pointer;font-family:"Saira Condensed",sans-serif;font-weight:600;
+    font-size:16px;letter-spacing:.02em;color:var(--ink);list-style:none}
+  details.help summary::-webkit-details-marker{display:none}
+  details.help summary::before{content:"\25B8 ";color:var(--accent)}
+  details.help[open] summary::before{content:"\25BE "}
+  .help ol{margin:12px 0 0;padding-left:20px;color:var(--muted);font-size:14px}
+  .help ol li{margin-bottom:8px}
+  .help code{background:var(--panel);border:1px solid var(--line);border-radius:4px;padding:1px 5px;
+    font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12.5px;color:var(--ink)}
+  .foot{margin-top:34px;text-align:center;color:var(--muted);font-size:12px;line-height:1.8}
+  .foot a{color:var(--accent-soft);text-decoration:none}
+  .foot a:hover{text-decoration:underline}
+  .sig{font-family:"Saira Condensed",sans-serif;font-weight:600;letter-spacing:.06em;color:var(--ink);font-size:13px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="brand"><b>WAR DOGS</b> &middot; fire control</div>
+  </header>
+
+  <h1>Range Calculator</h1>
+  <p class="sub">Paste the coordinates of your weapon and the target. The range to set (RNG) is displayed instantly, with no manual calculation required.</p>
+
+  <div class="weapons" role="group" aria-label="Weapon type">
+    <button type="button" data-w="mortar" aria-pressed="true">Mortar<span class="r">up to ~700 m</span></button>
+    <button type="button" data-w="artillery" aria-pressed="false">Artillery<span class="r">~750 to 2630 m</span></button>
+  </div>
+
+  <div class="inputs">
+    <div class="field">
+      <label>Your position <span class="tag">(the weapon)</span></label>
+      <textarea id="posA" spellcheck="false" placeholder="Paste the marked coordinates here">x94.53, y109.03</textarea>
+      <div class="parsed" id="parsedA"></div>
+    </div>
+    <div class="field">
+      <label>Target <span class="tag">(impact point)</span></label>
+      <textarea id="posB" spellcheck="false" placeholder="Paste the target coordinates here">x98.43, y110.38</textarea>
+      <div class="parsed" id="parsedB"></div>
+    </div>
+  </div>
+
+  <div class="readout" aria-live="polite">
+    <div class="cap">RANGE</div>
+    <div class="num" id="num">&mdash;</div>
+    <div class="dial" id="dial">Paste both coordinates to begin</div>
+    <div><span class="status" id="status" hidden></span></div>
+  </div>
+
+  <div class="details">
+    <span>&Delta;X <b id="dx">&mdash;</b></span>
+    <span>&Delta;Y <b id="dy">&mdash;</b></span>
+    <span class="axes">Ground axes
+      <select id="axes" aria-label="Select horizontal axes">
+        <option value="01">1 &amp; 2</option>
+        <option value="02">1 &amp; 3</option>
+        <option value="12">2 &amp; 3</option>
+      </select>
+    </span>
+  </div>
+
+  <details class="help">
+    <summary>How to get the coordinates</summary>
+    <ol>
+      <li>Open the map and center it on your weapon's position, then on the target.</li>
+      <li>Right-click and select <code>mark coordinates</code> to open the chat.</li>
+      <li>Press <code>Ctrl+A</code> to select all, then <code>Ctrl+C</code> to copy.</li>
+      <li>Paste into the matching field, then repeat for the second point.</li>
+      <li>Align your sight on the diamond marker and set the <b>RNG</b> to the displayed value.</li>
+    </ol>
+    <ol style="list-style:none;padding-left:0;margin-top:14px">
+      <li>If your coordinates include a height value (three numbers), keep the setting on <b>1 &amp; 2</b>. Change it only if the result appears incorrect.</li>
+    </ol>
+  </details>
+
+  <p class="foot">
+    All calculations run locally on your device. Nothing is transmitted.<br>
+    Method credit to <a href="https://www.youtube.com/@SwoleBenji" target="_blank" rel="noopener">SwoleBenji</a> for the original tutorial.<br>
+    <span class="sig">Made by IronBlack</span>
+  </p>
+</div>
+
+<script>
+(function(){
+  var WPN_KEY="wd_weapon", AX_KEY="wd_axes";
+  var SCALE=100;
+  var RANGES={ mortar:{min:0,max:700}, artillery:{min:750,max:2630} };
+  var weapon="mortar";
+
+  var $=function(id){return document.getElementById(id);};
+  var posA=$("posA"), posB=$("posB"), axesSel=$("axes");
+
+  try{var w=localStorage.getItem(WPN_KEY); if(w&&RANGES[w]) weapon=w;}catch(e){}
+  try{var a=localStorage.getItem(AX_KEY); if(a) axesSel.value=a;}catch(e){}
+
+  function paintWeapon(){
+    document.querySelectorAll(".weapons button").forEach(function(b){
+      b.setAttribute("aria-pressed", b.dataset.w===weapon ? "true":"false");
+    });
+  }
+  document.querySelectorAll(".weapons button").forEach(function(b){
+    b.addEventListener("click",function(){
+      weapon=b.dataset.w; paintWeapon();
+      try{localStorage.setItem(WPN_KEY,weapon);}catch(e){}
+      compute();
+    });
+  });
+  axesSel.addEventListener("change",function(){
+    try{localStorage.setItem(AX_KEY,axesSel.value);}catch(e){}
+    compute();
+  });
+
+  function nums(s){
+    var m=(s||"").match(/-?\d+(?:\.\d+)?/g);
+    return m?m.map(Number):[];
+  }
+  function pick(arr){
+    var idx=axesSel.value.split("").map(Number);
+    return [arr[idx[0]], arr[idx[1]]];
+  }
+
+  function compute(){
+    var A=nums(posA.value), B=nums(posB.value);
+
+    $("parsedA").innerHTML = A.length ? "read: <b>"+A.join(", ")+"</b>" : "";
+    $("parsedB").innerHTML = B.length ? "read: <b>"+B.join(", ")+"</b>" : "";
+
+    var needA = axesSel.value==="12" ? 3 : 2;
+    var enough = A.length>=needA && B.length>=needA;
+
+    var num=$("num"), dial=$("dial"), status=$("status");
+    if(!enough){
+      num.textContent="\u2014"; num.classList.add("dim");
+      dial.textContent = (A.length||B.length) ? "Incomplete coordinates" : "Paste both coordinates to begin";
+      status.hidden=true; $("dx").textContent="\u2014"; $("dy").textContent="\u2014";
+      return;
+    }
+
+    var a=pick(A), b=pick(B);
+    var dx=b[0]-a[0], dy=b[1]-a[1];
+    var dist=Math.sqrt(dx*dx+dy*dy)*SCALE;
+    var m=Math.round(dist);
+
+    num.classList.remove("dim");
+    num.innerHTML = m + '<span class="u">m</span>';
+    dial.innerHTML = 'Set your RNG to <b>'+m+' m</b>';
+    $("dx").textContent = (Math.round(dx*100)/100);
+    $("dy").textContent = (Math.round(dy*100)/100);
+
+    var R=RANGES[weapon];
+    status.hidden=false;
+    if(m<R.min){
+      status.className="status no"; status.textContent="TOO CLOSE for "+(weapon==="artillery"?"artillery":"mortar");
+    }else if(m>R.max){
+      status.className="status no"; status.textContent="OUT OF RANGE ("+(weapon==="artillery"?"artillery":"mortar")+")";
+    }else{
+      status.className="status ok"; status.textContent="IN RANGE";
+    }
+  }
+
+  posA.addEventListener("input",compute);
+  posB.addEventListener("input",compute);
+  paintWeapon();
+  compute();
+})();
+</script>
+</body>
+</html>
