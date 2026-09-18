@@ -2,7 +2,7 @@
 
 A web-based fire-control tool for **War Dogs** mortars and artillery. Paste the coordinates of your position and your target and it instantly returns the exact range (RNG) to dial in.
 
-https://ironblack879.github.io/wardogs-mortar-calculator/
+https://ironblack879.github.io/wardogs-range-calculator/
 
 ## Features
 
